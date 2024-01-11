@@ -3,7 +3,7 @@ export const app = express();
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { ErrorMiddleware } from "./middleware/error";
-import userRouter from "./routes/user.route";
+import UserRouter from "./routes/user.route";
 require("dotenv").config();
 
 // bodyParser
@@ -20,7 +20,7 @@ app.use(
 );
 
 // routes
-app.use("/api/v1", userRouter)
+app.use("/api/v1", UserRouter)
 
 // testing api
 app.get("/test", (req, res) => {

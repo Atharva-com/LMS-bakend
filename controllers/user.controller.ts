@@ -6,6 +6,8 @@ import jwt, { Secret } from "jsonwebtoken";
 import path from "path";
 import ejs from "ejs";
 import sendMail from "../utils/sendMail";
+import { sendtoken } from "../utils/jwt";
+import bcryptjs from "bcryptjs";
 require("dotenv").config();
 
 // register User
@@ -19,7 +21,7 @@ interface IRegistrationBody {
 export const register = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name, email, password } = req.body;
+      const { name, email, password } = req.body as IRegistrationBody;
 
       const isEmailExist = await userModel.findOne({ email });
       if (isEmailExist) {
@@ -93,7 +95,7 @@ interface IActivationRequest {
 export const activateUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { activation_Code, activation_Token } = req.body;
+      const { activation_Code, activation_Token } = req.body as IActivationRequest;
       const newUser: {user: IUser; activationCode: string} = jwt.verify(
         activation_Token,
         process.env.ACTIVATION_SECRET as Secret
@@ -104,7 +106,7 @@ export const activateUser = CatchAsyncError(
       }
 
       const {name, email, password} = newUser.user;
-
+      // const hashedPassword = bcryptjs.hashSync(password, 10)
       const existUser = await userModel.findOne({email})
 
       if(existUser){
@@ -116,7 +118,7 @@ export const activateUser = CatchAsyncError(
         email,
         password
       })
-
+      await (await user).save()
 
       res.status(200).json({
         success: true,
@@ -136,25 +138,49 @@ interface ILoginRequest{
 export const loginUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
   try {
 
-    const {email, password} = req.body;
+    const {email, password} = req.body as ILoginRequest;
 
     if(!email || !password){
       return next(new ErrorHandler("Please enter email & password", 400))
     }
 
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email }).select("+password");
+
+    console.log(user)
 
     if(!user){
       return next(new ErrorHandler("Invalid email or password.", 400))
     }
 
-    const isPasswordMatched = await user.comparePassword(password);
+    const hashedPassword = bcryptjs.hashSync(password, 10)
+console.log(hashedPassword)
+console.log(user.password)
+    const isPasswordMatched = user.comparePassword(password)
+
+    console.log(isPasswordMatched)
 
     if(!isPasswordMatched){
-      return next(new ErrorHandler("Invalid email or password.", 400))
+      return next(new ErrorHandler("Invalid password.", 400))
     }
+
+    sendtoken(user, 200, res)
     
-  } catch (error) {
-    
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+})
+
+// logout user
+export const logoutUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.clearCookie("access_token")
+    res.clearCookie("refresh_token")
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully."
+    })
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 500));
   }
 })
