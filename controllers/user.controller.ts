@@ -8,6 +8,7 @@ import ejs from "ejs";
 import sendMail from "../utils/sendMail";
 import { sendtoken } from "../utils/jwt";
 import bcryptjs from "bcryptjs";
+import { redis } from "../utils/redis";
 require("dotenv").config();
 
 // register User
@@ -51,8 +52,7 @@ export const register = CatchAsyncError(
 
         res.status(200).json({
           success: true,
-          message:
-            `Please check your email: ${user.email} to activate your account.`,
+          message: `Please check your email: ${user.email} to activate your account.`,
           activationToken: activationToken.token,
         });
       } catch (error: any) {
@@ -95,30 +95,31 @@ interface IActivationRequest {
 export const activateUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { activation_Code, activation_Token } = req.body as IActivationRequest;
-      const newUser: {user: IUser; activationCode: string} = jwt.verify(
+      const { activation_Code, activation_Token } =
+        req.body as IActivationRequest;
+      const newUser: { user: IUser; activationCode: string } = jwt.verify(
         activation_Token,
         process.env.ACTIVATION_SECRET as Secret
-      ) as {user: IUser; activationCode: string}
+      ) as { user: IUser; activationCode: string };
 
-      if(newUser.activationCode !== activation_Code){
-        return next(new ErrorHandler("Invalid activation code", 400))
+      if (newUser.activationCode !== activation_Code) {
+        return next(new ErrorHandler("Invalid activation code", 400));
       }
 
-      const {name, email, password} = newUser.user;
+      const { name, email, password } = newUser.user;
       // const hashedPassword = bcryptjs.hashSync(password, 10)
-      const existUser = await userModel.findOne({email})
+      const existUser = await userModel.findOne({ email });
 
-      if(existUser){
-        return next(new ErrorHandler("Email already exists", 400))
+      if (existUser) {
+        return next(new ErrorHandler("Email already exists", 400));
       }
 
       const user = userModel.create({
         name,
         email,
-        password
-      })
-      await (await user).save()
+        password,
+      });
+      await (await user).save();
 
       res.status(200).json({
         success: true,
@@ -130,57 +131,63 @@ export const activateUser = CatchAsyncError(
   }
 );
 
-interface ILoginRequest{
+interface ILoginRequest {
   email: string;
   password: string;
 }
 
-export const loginUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-  try {
+export const loginUser = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, password } = req.body as ILoginRequest;
 
-    const {email, password} = req.body as ILoginRequest;
+      if (!email || !password) {
+        return next(new ErrorHandler("Please enter email & password", 400));
+      }
 
-    if(!email || !password){
-      return next(new ErrorHandler("Please enter email & password", 400))
+      const user = await userModel.findOne({ email }).select("+password");
+
+      console.log(user);
+
+      if (!user) {
+        return next(new ErrorHandler("Invalid email or password.", 400));
+      }
+
+      const hashedPassword = bcryptjs.hashSync(password, 10);
+      console.log(hashedPassword);
+      console.log(user.password);
+      const isPasswordMatched = user.comparePassword(password);
+
+      console.log(isPasswordMatched);
+
+      if (!isPasswordMatched) {
+        return next(new ErrorHandler("Invalid password.", 400));
+      }
+
+      sendtoken(user, 200, res);
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
     }
-
-    const user = await userModel.findOne({ email }).select("+password");
-
-    console.log(user)
-
-    if(!user){
-      return next(new ErrorHandler("Invalid email or password.", 400))
-    }
-
-    const hashedPassword = bcryptjs.hashSync(password, 10)
-console.log(hashedPassword)
-console.log(user.password)
-    const isPasswordMatched = user.comparePassword(password)
-
-    console.log(isPasswordMatched)
-
-    if(!isPasswordMatched){
-      return next(new ErrorHandler("Invalid password.", 400))
-    }
-
-    sendtoken(user, 200, res)
-    
-  } catch (error: any) {
-    return next(new ErrorHandler(error.message, 500));
   }
-})
+);
 
+export interface IGetUserAuthInfoRequest extends Request {
+  user: IUser // or any other type
+}
 // logout user
-export const logoutUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    res.clearCookie("access_token")
-    res.clearCookie("refresh_token")
-
-    res.status(200).json({
-      success: true,
-      message: "Logged out successfully."
-    })
-  } catch (error: any) {
-    return next(new ErrorHandler(error.message, 500));
+export const logoutUser = CatchAsyncError(
+  async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
+    try {
+      res.clearCookie("access_token");
+      res.clearCookie("refresh_token");
+      const userId = req.user?._id || "";
+      redis.del(userId);
+      res.status(200).json({
+        success: true,
+        message: "Logged out successfully.",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
   }
-})
+);
