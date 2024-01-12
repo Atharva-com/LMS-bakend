@@ -15,6 +15,7 @@ import bcryptjs from "bcryptjs";
 import { redis } from "../utils/redis";
 import { getUserById } from "../services/user.service";
 require("dotenv").config();
+import cloudinary from "cloudinary";
 
 // register User
 interface IRegistrationBody {
@@ -253,8 +254,6 @@ export const updateAccessToken = CatchAsyncError(
   }
 );
 
-
-
 // get user by id
 
 export const getUserInfo = CatchAsyncError(
@@ -366,10 +365,75 @@ export const updatePassword = CatchAsyncError(
 
       await user.save();
 
+      await redis.set(req.user?._id, JSON.stringify(user));
+
       res.status(200).json({
         success: true,
         message: "Password updated successfully.",
-        user
+        user,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+// update profile avatar
+
+interface IUpdateProfileAvatar {
+  avatar: string;
+}
+
+export const updateProfilePicture = CatchAsyncError(
+  async (req: IGetUserRequest, res: Response, next: NextFunction) => {
+    try {
+      const { avatar } = req.body as IUpdateProfileAvatar;
+      const userId = req.user?._id;
+      const user = await userModel.findById(userId);
+
+      if (!user) {
+        return next(new ErrorHandler("User not found.", 400));
+      }
+
+      if (avatar && user) {
+        if (user?.avatar?.public_id) {
+
+          // first delete the old image from cloudinary
+          await cloudinary.v2.uploader.destroy(user?.avatar?.public_id);
+
+          // then upload the new one
+          const myCloud = await cloudinary.v2.uploader.upload(avatar, {
+            folder: "avatars",
+            width: 150,
+          });
+
+          user.avatar = {
+            public_id: myCloud.public_id,
+            url: myCloud.secure_url,
+          };
+
+        } else {
+
+          const myCloud = await cloudinary.v2.uploader.upload(avatar, {
+            folder: "avatars",
+            width: 150,
+          });
+
+          user.avatar = {
+            public_id: myCloud.public_id,
+            url: myCloud.secure_url,
+          };
+        }
+      }
+
+      await user.save();
+
+      await redis.set(userId, JSON.stringify(user));
+
+      res.status(200).json({
+        success: true,
+        message: "Profile avatar updated successfully.",
+        user,
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
