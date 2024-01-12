@@ -2,12 +2,13 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 require("dotenv").config();
 import bcryptjs from "bcryptjs";
 import jwt, { Secret } from "jsonwebtoken";
+import { IUser } from "./user.model";
 
 
 interface IComment extends Document {
-    user: object,
-    comment: string,
-    commentReplies: IComment[]
+    user: IUser,
+    question: string,
+    questionReplies: IComment[]
 }
 
 
@@ -73,8 +74,8 @@ const commentSchema = new Schema<IComment>({
     user: {
         type: Object,
     },
-    comment: String,
-    commentReplies: [Object]
+    question: String,
+    questionReplies: [Object]
 });
 
 const courseDataSchema = new Schema<ICourseData>({
