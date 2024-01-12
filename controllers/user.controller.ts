@@ -9,6 +9,7 @@ import sendMail from "../utils/sendMail";
 import { accessTokenOptions, refreshTokenOptions, sendtoken } from "../utils/jwt";
 import bcryptjs from "bcryptjs";
 import { redis } from "../utils/redis";
+import { getUserById } from "../services/user.service";
 require("dotenv").config();
 
 // register User
@@ -63,6 +64,8 @@ export const register = CatchAsyncError(
     }
   }
 );
+
+// create activation token
 
 interface IActivationToken {
   token: string;
@@ -131,6 +134,8 @@ export const activateUser = CatchAsyncError(
   }
 );
 
+// Login User
+
 interface ILoginRequest {
   email: string;
   password: string;
@@ -171,10 +176,11 @@ export const loginUser = CatchAsyncError(
   }
 );
 
+// logout user
 export interface IGetUserAuthInfoRequest extends Request {
   user: IUser // or any other type
 }
-// logout user
+
 export const logoutUser = CatchAsyncError(
   async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
     try {
@@ -240,3 +246,50 @@ export const updateAccessToken = CatchAsyncError(
     }
   }
 );
+
+// get user by id
+
+export interface IGetUserById extends Request {
+  user: IUser // or any other type
+}
+
+export const getUserInfo = CatchAsyncError(
+  async (req: IGetUserById, res: Response, next: NextFunction) => {
+    try {
+      const userId  = req.user._id
+      getUserById(userId, res)
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+
+// social authorization
+
+interface ISocialAuthBody {
+  email: string;
+  name: string;
+  avatar: string;
+
+}
+
+export const socialAuth = CatchAsyncError(async (req:Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, name, avatar } = req.body as ISocialAuthBody
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      const newUser = await userModel.create({
+        name,
+        email,
+        avatar
+      })
+      await newUser.save()
+      sendtoken(newUser, 200, res)
+    } else {
+      sendtoken(user, 200, res)
+    }
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 400));
+  }
+})
