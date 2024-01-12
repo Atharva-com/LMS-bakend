@@ -166,15 +166,16 @@ export const loginUser = CatchAsyncError(
       const hashedPassword = bcryptjs.hashSync(password, 10);
       console.log(hashedPassword);
       console.log(user.password);
-      const isPasswordMatched = user.comparePassword(password);
+      const isPasswordMatched = bcryptjs.compareSync(password, user.password);
 
       console.log(isPasswordMatched);
 
       if (!isPasswordMatched) {
-        return next(new ErrorHandler("Invalid password.", 400));
+        return next(new ErrorHandler("Invalid password.", 400)); 
+      } else {
+        sendtoken(user, 200, res);
       }
 
-      sendtoken(user, 200, res);
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
     }

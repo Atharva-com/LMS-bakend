@@ -16,7 +16,7 @@ export interface IUser extends Document {
   role: string;
   isVerified: boolean;
   courses: Array<{ courseId: string }>;
-  comparePassword: (password: string) => Promise<boolean>;
+  comparePassword: (password: string) => boolean;
   SignAccessToken: () => String;
   SignRefreshToken: () => String;
 }
@@ -103,14 +103,8 @@ userSchema.methods.SignRefreshToken = function () {
 // Compare user password
 userSchema.methods.comparePassword = async function (
   enteredPassword: string
-): Promise<boolean> {
-  try {
+) {
     return bcryptjs.compareSync(enteredPassword, this.password);
-  } catch (error) {
-    // Handle the error (log or throw)
-    console.error('Error comparing passwords:', error);
-    throw new Error('Error comparing passwords');
-  }
 };
 
 const userModel: Model<IUser> = mongoose.model("User", userSchema);

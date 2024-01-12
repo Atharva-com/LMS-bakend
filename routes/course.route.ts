@@ -4,6 +4,6 @@ import { authorizeRoles, isAuthenticated } from '../middleware/auth'
 
 const CourseRouter = express.Router()
 
-CourseRouter.post('/create-course', isAuthenticated, authorizeRoles('admin'), createCourse)
+CourseRouter.post('/create-course', isAuthenticated, createCourse)
 
 export default CourseRouter
