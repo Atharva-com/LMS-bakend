@@ -13,7 +13,7 @@ import {
 } from "../utils/jwt";
 import bcryptjs from "bcryptjs";
 import { redis } from "../utils/redis";
-import { getAllUsersService, getUserById } from "../services/user.service";
+import { getAllUsersService, getUserById, updateUserRoleService } from "../services/user.service";
 require("dotenv").config();
 import cloudinary from "cloudinary";
 
@@ -452,3 +452,40 @@ export const getAllUsers = CatchAsyncError(
     }
   }
 );
+
+// update user role - only admin
+
+export const updateUserRole = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { role, id } = req.body;
+      updateUserRoleService(res, id, role);
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+// delete user - only admin
+
+export const deleteUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    const user = await userModel.findById(id)
+
+    if (!user) {
+      return next(new ErrorHandler('User not found.', 400));
+    }
+
+    await user.deleteOne({ id });
+
+    await redis.del(id)
+    res.status(200).json({
+      success: true,
+      message: 'User deleted successfully.'
+    })
+  } catch (error: any) {
+    return next(new ErrorHandler(error.message, 400));
+  }
+})
