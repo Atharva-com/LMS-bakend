@@ -11,6 +11,7 @@ import mongoose from "mongoose";
 import path from "path";
 import ejs from "ejs";
 import sendMail from "../utils/sendMail";
+import NotificationModel from "../models/notification.model";
 
 // upload Course
 export const uploadCourse = CatchAsyncError(
@@ -223,6 +224,12 @@ export const addQuestion = CatchAsyncError(
       // add this question in course content
       courseContent.questions.push(newQuestion);
 
+      await NotificationModel.create({
+        user: req.user?._id,
+        title: "New Question Recieved.",
+        message: `${req.user?.name} has asked a question on your course ${course?.name} in ${courseContent?.title}`,
+      })
+
       await course?.save();
 
       res.status(200).json({
@@ -289,7 +296,11 @@ export const addAnswer = CatchAsyncError(
       await course?.save();
 
       if(req.user?._id  === question.user.id) {
-        // create a notification
+        await NotificationModel.create({
+          user: req.user?._id,
+          title: "New Answer Recieved.",
+          message: `${req.user?.name} has replied your question on your course ${course?.name} in ${courseContent?.title}`,
+        })
       } else {
         const data = {
           name: question.user.name,
