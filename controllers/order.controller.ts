@@ -20,7 +20,6 @@ export const createOrder = CatchAsyncError(
       const userId = req.user._id;
 
       const user = await userModel.findById(userId);
-
       if (!user) {
         return next(new ErrorHandler("User not found", 404));
       }
@@ -28,7 +27,6 @@ export const createOrder = CatchAsyncError(
       const courseExit = user?.courses.some(
         (course: any) => course._id.toString() === courseId
       );
-
       if (courseExit) {
         return next(new ErrorHandler("You already purchased this course", 400));
       }
@@ -41,16 +39,15 @@ export const createOrder = CatchAsyncError(
       const data: any = {
         courseId: course._id,
         userId: user._id,
+        payment_Info,
       };
-
-      newOrder(data, res, next);
 
       const mailData = {
         order: {
-          _id: course._id.slice(0, 6),
+          _id: course._id.toString().slice(0, 6),
           name: course.name,
           price: course.price,
-          date: new Date().toLocaleDateString("en-IND", {
+          date: new Date().toLocaleDateString("en-IN", {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -86,13 +83,13 @@ export const createOrder = CatchAsyncError(
         message: `You have successfully purchased ${course.name} course`,
       });
 
-      await notification.save();
+      if (course.purchased) {
+        course.purchased += 1;
+      }
 
-      res.status(200).json({
-        success: true,
-        message: "Order created successfully",
-        order: course,
-      });
+      await course.save();
+
+      newOrder(data, res, next);
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
     }

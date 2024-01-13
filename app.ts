@@ -6,6 +6,7 @@ import { ErrorMiddleware } from "./middleware/error";
 import UserRouter from "./routes/user.route";
 import CourseRouter from "./routes/course.route";
 import OrderRouter from "./routes/order.route";
+import NotificationRouter from "./routes/notification.route";
 require("dotenv").config();
 
 // bodyParser
@@ -22,9 +23,7 @@ app.use(
 );
 
 // routes
-app.use("/api/v1", UserRouter)
-app.use("/api/v1", CourseRouter)
-app.use("/api/v1", OrderRouter)
+app.use("/api/v1", UserRouter, CourseRouter, OrderRouter, NotificationRouter)
 
 // testing api
 app.get("/test", (req, res) => {
