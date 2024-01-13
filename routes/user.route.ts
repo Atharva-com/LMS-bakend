@@ -1,6 +1,6 @@
 import express from 'express'
-import { activateUser, getUserInfo, loginUser, logoutUser, register, socialAuth, updateAccessToken, updatePassword, updateProfilePicture, updateUserInfo } from '../controllers/user.controller'
-import { isAuthenticated } from '../middleware/auth'
+import { activateUser, getAllUsers, getUserInfo, loginUser, logoutUser, register, socialAuth, updateAccessToken, updatePassword, updateProfilePicture, updateUserInfo } from '../controllers/user.controller'
+import { authorizeRoles, isAuthenticated } from '../middleware/auth'
 const UserRouter = express.Router()
 
 UserRouter.post('/registration', register)
@@ -22,5 +22,7 @@ UserRouter.put('/update-user-info', isAuthenticated, updateUserInfo)
 UserRouter.put('/update-user-password', isAuthenticated, updatePassword)
 
 UserRouter.put('/update-user-profile', isAuthenticated, updateProfilePicture)
+
+UserRouter.get('/all-users', isAuthenticated, authorizeRoles('admin'), getAllUsers)
 
 export default UserRouter
