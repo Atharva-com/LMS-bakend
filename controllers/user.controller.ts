@@ -162,13 +162,7 @@ export const loginUser = CatchAsyncError(
       if (!user) {
         return next(new ErrorHandler("Invalid email or password.", 400));
       }
-
-      const hashedPassword = bcryptjs.hashSync(password, 10);
-      console.log(hashedPassword);
-      console.log(user.password);
       const isPasswordMatched = bcryptjs.compareSync(password, user.password);
-
-      console.log(isPasswordMatched);
 
       if (!isPasswordMatched) {
         return next(new ErrorHandler("Invalid password.", 400)); 
@@ -223,7 +217,7 @@ export const updateAccessToken = CatchAsyncError(
       const session = await redis.get(decoded.id as string);
 
       if (!session) {
-        return next(new ErrorHandler(message, 400));
+        return next(new ErrorHandler("Please Login to access this resource", 400));
       }
 
       const user = JSON.parse(session);
@@ -244,6 +238,8 @@ export const updateAccessToken = CatchAsyncError(
 
       res.cookie("access_token", accessToken, accessTokenOptions);
       res.cookie("refresh_token", refreshToken, refreshTokenOptions);
+
+      await redis.set(user._id, JSON.stringify(user), "EX", 604800) // 7 days
 
       res.status(200).json({
         success: true,
