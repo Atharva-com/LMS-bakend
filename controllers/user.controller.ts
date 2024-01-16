@@ -13,7 +13,11 @@ import {
 } from "../utils/jwt";
 import bcryptjs from "bcryptjs";
 import { redis } from "../utils/redis";
-import { getAllUsersService, getUserById, updateUserRoleService } from "../services/user.service";
+import {
+  getAllUsersService,
+  getUserById,
+  updateUserRoleService,
+} from "../services/user.service";
 require("dotenv").config();
 import cloudinary from "cloudinary";
 
@@ -105,6 +109,10 @@ export const activateUser = CatchAsyncError(
     try {
       const { activation_Code, activation_Token } =
         req.body as IActivationRequest;
+
+      if (!activation_Code || !activation_Token) {
+        return next(new ErrorHandler("Invalid activation code", 400));
+      }
       const newUser: { user: IUser; activationCode: string } = jwt.verify(
         activation_Token,
         process.env.ACTIVATION_SECRET as Secret
@@ -134,6 +142,7 @@ export const activateUser = CatchAsyncError(
         message: "Account activated successfully",
       });
     } catch (error: any) {
+      console.log(error);
       return next(new ErrorHandler(error.message, 500));
     }
   }
@@ -165,11 +174,10 @@ export const loginUser = CatchAsyncError(
       const isPasswordMatched = bcryptjs.compareSync(password, user.password);
 
       if (!isPasswordMatched) {
-        return next(new ErrorHandler("Invalid password.", 400)); 
+        return next(new ErrorHandler("Invalid password.", 400));
       } else {
         sendtoken(user, 200, res);
       }
-
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
     }
@@ -217,7 +225,9 @@ export const updateAccessToken = CatchAsyncError(
       const session = await redis.get(decoded.id as string);
 
       if (!session) {
-        return next(new ErrorHandler("Please Login to access this resource", 400));
+        return next(
+          new ErrorHandler("Please Login to access this resource", 400)
+        );
       }
 
       const user = JSON.parse(session);
@@ -239,7 +249,7 @@ export const updateAccessToken = CatchAsyncError(
       res.cookie("access_token", accessToken, accessTokenOptions);
       res.cookie("refresh_token", refreshToken, refreshTokenOptions);
 
-      await redis.set(user._id, JSON.stringify(user), "EX", 604800) // 7 days
+      await redis.set(user._id, JSON.stringify(user), "EX", 604800); // 7 days
 
       res.status(200).json({
         success: true,
@@ -394,7 +404,6 @@ export const updateProfilePicture = CatchAsyncError(
 
       if (avatar && user) {
         if (user?.avatar?.public_id) {
-
           // first delete the old image from cloudinary
           await cloudinary.v2.uploader.destroy(user?.avatar?.public_id);
 
@@ -408,9 +417,7 @@ export const updateProfilePicture = CatchAsyncError(
             public_id: myCloud.public_id,
             url: myCloud.secure_url,
           };
-
         } else {
-
           const myCloud = await cloudinary.v2.uploader.upload(avatar, {
             folder: "avatars",
             width: 150,
@@ -442,7 +449,7 @@ export const updateProfilePicture = CatchAsyncError(
 export const getAllUsers = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      getAllUsersService(res)
+      getAllUsersService(res);
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
@@ -464,24 +471,26 @@ export const updateUserRole = CatchAsyncError(
 
 // delete user - only admin
 
-export const deleteUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
+export const deleteUser = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
 
-    const user = await userModel.findById(id)
+      const user = await userModel.findById(id);
 
-    if (!user) {
-      return next(new ErrorHandler('User not found.', 400));
+      if (!user) {
+        return next(new ErrorHandler("User not found.", 400));
+      }
+
+      await user.deleteOne({ id });
+
+      await redis.del(id);
+      res.status(200).json({
+        success: true,
+        message: "User deleted successfully.",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
     }
-
-    await user.deleteOne({ id });
-
-    await redis.del(id)
-    res.status(200).json({
-      success: true,
-      message: 'User deleted successfully.'
-    })
-  } catch (error: any) {
-    return next(new ErrorHandler(error.message, 400));
   }
-})
+);
