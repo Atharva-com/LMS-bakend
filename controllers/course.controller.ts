@@ -12,6 +12,7 @@ import path from "path";
 import ejs from "ejs";
 import sendMail from "../utils/sendMail";
 import NotificationModel from "../models/notification.model";
+import axios from "axios";
 
 // upload Course
 export const uploadCourse = CatchAsyncError(
@@ -228,7 +229,7 @@ export const addQuestion = CatchAsyncError(
         user: req.user?._id,
         title: "New Question Recieved.",
         message: `${req.user?.name} has asked a question on your course ${course?.name} in ${courseContent?.title}`,
-      })
+      });
 
       await course?.save();
 
@@ -295,17 +296,17 @@ export const addAnswer = CatchAsyncError(
 
       await course?.save();
 
-      if(req.user?._id  === question.user.id) {
+      if (req.user?._id === question.user.id) {
         await NotificationModel.create({
           user: req.user?._id,
           title: "New Answer Recieved.",
           message: `${req.user?.name} has replied your question on your course ${course?.name} in ${courseContent?.title}`,
-        })
+        });
       } else {
         const data = {
           name: question.user.name,
-          title: courseContent.title
-        }
+          title: courseContent.title,
+        };
 
         const html = await ejs.renderFile(
           path.join(__dirname, "../mails/question-reply.ejs"),
@@ -319,7 +320,6 @@ export const addAnswer = CatchAsyncError(
             template: "question-reply.ejs",
             data,
           });
-  
         } catch (error: any) {
           return next(new ErrorHandler(error.message, 400));
         }
@@ -345,17 +345,19 @@ interface IAddReviewData {
 export const addReview = CatchAsyncError(
   async (req: IGetUserRequest, res: Response, next: NextFunction) => {
     try {
-      const userCourseList = req.user?.courses
-      const courseId = req.params.id
+      const userCourseList = req.user?.courses;
+      const courseId = req.params.id;
 
       const courseExist = userCourseList.find(
         (course: any) => course._id.toString() === courseId.toString()
       );
 
       if (!courseExist) {
-        return next(new ErrorHandler("You are not eligible to access this course.", 400));
+        return next(
+          new ErrorHandler("You are not eligible to access this course.", 400)
+        );
       }
-      
+
       const { review, rating } = req.body as IAddReviewData;
 
       const course = await CourseModel.findById(courseId);
@@ -367,19 +369,19 @@ export const addReview = CatchAsyncError(
       const reviewData: any = {
         user: req.user,
         comment: review,
-        rating
+        rating,
       };
 
       course?.reviews?.push(reviewData);
 
-      let avg = 0
+      let avg = 0;
 
       course?.reviews?.forEach((item: any) => {
-        avg += item.rating
-      })
+        avg += item.rating;
+      });
 
-      if(course){
-        course.ratings = avg / course?.reviews?.length
+      if (course) {
+        course.ratings = avg / course?.reviews?.length;
       }
 
       course?.save();
@@ -387,7 +389,7 @@ export const addReview = CatchAsyncError(
       const notification = {
         title: "New Review Recieved.",
         message: `${req.user?.name} has given a review on your course ${course?.name}`,
-      }
+      };
 
       // create notification
 
@@ -432,8 +434,8 @@ export const addReplyToReview = CatchAsyncError(
         comment,
       };
 
-      if(!review?.commentReplies){
-        review.commentReplies = []
+      if (!review?.commentReplies) {
+        review.commentReplies = [];
       }
 
       review?.commentReplies.push(replyData);
@@ -452,12 +454,11 @@ export const addReplyToReview = CatchAsyncError(
   }
 );
 
-
 // get all courses only for admin
 export const getAllCoursesAdmin = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      getAllCoursesService(res)
+      getAllCoursesService(res);
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
@@ -466,24 +467,52 @@ export const getAllCoursesAdmin = CatchAsyncError(
 
 // delete course - only admin
 
-export const deleteCourse = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
+export const deleteCourse = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
 
-    const course = await CourseModel.findById(id)
+      const course = await CourseModel.findById(id);
 
-    if (!course) {
-      return next(new ErrorHandler('User not found.', 400));
+      if (!course) {
+        return next(new ErrorHandler("User not found.", 400));
+      }
+
+      await course.deleteOne({ id });
+
+      await redis.del(id);
+      res.status(200).json({
+        success: true,
+        message: "Course deleted successfully.",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
     }
-
-    await course.deleteOne({ id });
-
-    await redis.del(id)
-    res.status(200).json({
-      success: true,
-      message: 'Course deleted successfully.'
-    })
-  } catch (error: any) {
-    return next(new ErrorHandler(error.message, 400));
   }
-})
+);
+
+// generate video url
+export const generateVideoUrl = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { videoId } = req.body;
+
+      const response = await axios.post(
+        // `https://dev.vdocipher.com/api/videos/${videoId}/otp`,
+        ``,
+        { ttl: 300 },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.VIMEO_ACCESS_TOKEN}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      res.json(response.data)
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
