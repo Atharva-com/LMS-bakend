@@ -5,7 +5,7 @@ import CourseModel from "../models/course.model";
 // create course
 export const createCourse = CatchAsyncError(async (data: any, res: Response) => {
     const course = await CourseModel.create(data)
-    
+    await course.save();
     return res.status(200).json({
         success: true,
         message: 'Course created',

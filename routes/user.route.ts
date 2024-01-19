@@ -9,24 +9,24 @@ UserRouter.post('/activate-user', activateUser)
 
 UserRouter.post('/login', loginUser)
 
-UserRouter.get('/logout', isAuthenticated, logoutUser)
+UserRouter.get('/logout',updateAccessToken, isAuthenticated, logoutUser)
 
 UserRouter.get('/refresh', updateAccessToken)
 
-UserRouter.get('/me', isAuthenticated, getUserInfo)
+UserRouter.get('/me',updateAccessToken, isAuthenticated, getUserInfo)
 
 UserRouter.post('/social-auth', socialAuth)
 
-UserRouter.put('/update-user-info', isAuthenticated, updateUserInfo)
+UserRouter.put('/update-user-info',updateAccessToken, isAuthenticated, updateUserInfo)
 
-UserRouter.put('/update-user-password', isAuthenticated, updatePassword)
+UserRouter.put('/update-user-password',updateAccessToken, isAuthenticated, updatePassword)
 
-UserRouter.put('/update-user-profile', isAuthenticated, updateProfilePicture)
+UserRouter.put('/update-user-profile',updateAccessToken, isAuthenticated, updateProfilePicture)
 
-UserRouter.get('/all-users', isAuthenticated, authorizeRoles('admin'), getAllUsers)
+UserRouter.get('/all-users',updateAccessToken, isAuthenticated, authorizeRoles('admin'), getAllUsers)
 
-UserRouter.put('/update-user-role', isAuthenticated, authorizeRoles('admin'), updateUserRole)
+UserRouter.put('/update-user-role',updateAccessToken, isAuthenticated, authorizeRoles('admin'), updateUserRole)
 
-UserRouter.delete('/delete-user/:id', isAuthenticated, authorizeRoles('admin'), deleteUser)
+UserRouter.delete('/delete-user/:id',updateAccessToken, isAuthenticated, authorizeRoles('admin'), deleteUser)
 
 export default UserRouter
