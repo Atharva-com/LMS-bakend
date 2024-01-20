@@ -4,6 +4,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import ErrorHandler from "../utils/ErrorHandler";
 import { redis } from "../utils/redis";
 import { IUser } from "../models/user.model";
+import { updateAccessToken } from "../controllers/user.controller";
 
 export interface IAuthInfoRequest extends Request {
   user: IUser // or any other type
@@ -16,20 +17,30 @@ export const isAuthenticated = CatchAsyncError(async(req: IAuthInfoRequest, res:
         return next(new ErrorHandler("Login first to access this resource.", 401));
     }
 
-    const decoded = jwt.verify(access_token, process.env.ACCESS_TOKEN as string) as JwtPayload;
+    const decoded = jwt.decode(access_token) as JwtPayload;
 
     if(!decoded) {
         return next(new ErrorHandler("access token is not valid .", 400));
     }
 
-    const user = await redis.get(decoded.id);
+    if(decoded.exp && decoded.exp <= Date.now()/1000) {
+        try {
+            await updateAccessToken(req, res, next)
+        } catch (error) {
+            return next(error);
+        }
+    } else {
+        const user = await redis.get(decoded.id);
 
-    if(!user) {
-        return next(new ErrorHandler("User does not exist.", 404));
+        if(!user) {
+            return next(new ErrorHandler("User does not exist.", 404));
+        }
+    
+        req.user = JSON.parse(user);
+        next()
     }
 
-    req.user = JSON.parse(user);
-    next()
+    
 })
 
 // validate user

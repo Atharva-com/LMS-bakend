@@ -248,7 +248,7 @@ export const updateAccessToken = CatchAsyncError(
       res.cookie("refresh_token", refreshToken, refreshTokenOptions);
 
       await redis.set(user._id, JSON.stringify(user), "EX", 604800); // 7 days
-      next();
+      return next();
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
     }
@@ -460,7 +460,8 @@ export const updateUserRole = CatchAsyncError(
       if(!isUserExist){
         return next(new ErrorHandler("User not found.", 400));
       } else{
-        updateUserRoleService(res, email, role);
+        const id = isUserExist._id
+        updateUserRoleService(res, id, role);
       }
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
