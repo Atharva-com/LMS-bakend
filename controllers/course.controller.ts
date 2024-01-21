@@ -86,6 +86,7 @@ export const editCourse = CatchAsyncError(
 
       res.status(200).json({
         success: true,
+        message: "Course updated successfully.",
         course,
       });
     } catch (error: any) {
