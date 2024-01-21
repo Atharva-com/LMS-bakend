@@ -8,6 +8,6 @@ layoutRoute.post('/create-layout',  isAuthenticated, authorizeRoles('admin'), cr
 
 layoutRoute.put('/edit-layout',  isAuthenticated, authorizeRoles('admin'), editLayout)
 
-layoutRoute.get('/get-layout',  getLayoutByType)
+layoutRoute.get('/get-layout/:type',  getLayoutByType)
 
 export default layoutRoute
