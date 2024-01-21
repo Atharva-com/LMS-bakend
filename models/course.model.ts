@@ -1,9 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 require("dotenv").config();
-import bcryptjs from "bcryptjs";
-import jwt, { Secret } from "jsonwebtoken";
 import { IUser } from "./user.model";
-
 
 interface IComment extends Document {
     user: IUser,
@@ -96,12 +93,10 @@ const courseSchema: Schema<ICourse> = new mongoose.Schema(
         name: {
             type: String,
             required: [true, "Please enter your name"],
-            maxLength: [30, "Your name cannot exceed 30 characters"],
         },
         description: {
             type: String,
             required: [true, "Please enter your description"],
-            maxLength: [500, "Your description cannot exceed 500 characters"],
         },
         price: {
             type: Number,

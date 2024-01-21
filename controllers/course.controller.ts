@@ -48,14 +48,17 @@ export const editCourse = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body;
-
       if (!data) {
         return next(new ErrorHandler("Please fill all the fields.", 400));
       }
 
       const thumbnail = data.thumbnail;
 
-      if (thumbnail) {
+      const courseId = req.params.id
+
+      const courseData = await CourseModel.findById(courseId) as any
+
+      if (thumbnail && !thumbnail.startsWith("https")) {
         await cloudinary.v2.uploader.destroy(data.thumbnail.public_id);
 
         const myCloud = await cloudinary.v2.uploader.upload(thumbnail, {
@@ -68,7 +71,12 @@ export const editCourse = CatchAsyncError(
         };
       }
 
-      const courseId = req.params.id;
+      if(thumbnail.startsWith("https")){
+        data.thumbnail = {
+          url: courseData.thumbnail.url,
+          public_id: courseData?.thumbnail.public_id
+        }
+      }
 
       const course = await CourseModel.findByIdAndUpdate(
         courseId,
@@ -500,6 +508,7 @@ export const deleteCourse = CatchAsyncError(
       } catch (error) {
         console.log(error)
       }
+      await redis.del(id)
       res.status(200).json({
         success: true,
         message: "Course deleted successfully.",
