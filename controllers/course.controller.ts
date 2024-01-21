@@ -471,16 +471,35 @@ export const deleteCourse = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-
+      console.log(id);
+      
+      
       const course = await CourseModel.findById(id);
 
       if (!course) {
-        return next(new ErrorHandler("User not found.", 400));
+        return next(new ErrorHandler("Course not found.", 400));
       }
 
       await course.deleteOne({ id });
 
-      await redis.del(id);
+      try {
+        const res: any = await redis.get("allCourses");
+        const allCourses = JSON.parse(res);
+        console.log(allCourses)
+        const course = allCourses.findIndex((course:any) => course._id === id)
+        if (course !== -1) {
+          allCourses.splice(course, 1);
+      
+          // Step 5: Update the allCourses array in Redis
+          await redis.set('allCourses', JSON.stringify(allCourses));
+          console.log('Course deleted successfully.');
+        } else {
+          console.log('Course not found.');
+        }
+        
+      } catch (error) {
+        console.log(error)
+      }
       res.status(200).json({
         success: true,
         message: "Course deleted successfully.",
