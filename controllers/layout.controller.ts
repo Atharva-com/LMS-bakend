@@ -128,7 +128,7 @@ export const editLayout = CatchAsyncError(
         const category = await LayoutModel.findOne({ type: "Categories" });
 
         if (!category) {
-          return next(new ErrorHandler(`FAQ Item does not exist.`, 400));
+          return next(new ErrorHandler(`Categories Item does not exist.`, 400));
         }
         const categoriesItems = await Promise.all(
           categories.map(async (item: any) => {
