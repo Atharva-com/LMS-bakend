@@ -138,7 +138,10 @@ export const getAllCourses = CatchAsyncError(
       const isCashedExist = await redis.get("allCourses");
 
       if (isCashedExist) {
-        const courses = JSON.parse(isCashedExist);
+        const courses = await CourseModel.find().select(
+          "-courseData.videoUrl -courseData.suggestion -courseData.questions -courseData.links"
+        );
+        await redis.set("allCourses", JSON.stringify(courses));
         return res.status(200).json({
           success: true,
           courses,
