@@ -10,6 +10,6 @@ OrderRouter.get('/all-orders', isAuthenticated, authorizeRoles("admin"), getAllO
 
 OrderRouter.get("/payment/stripepublishalblekey", sendStripePublishableKey)
 
-OrderRouter.get("/payment", isAuthenticated, newPayment)
+OrderRouter.post("/payment", isAuthenticated, newPayment)
 
 export default OrderRouter;

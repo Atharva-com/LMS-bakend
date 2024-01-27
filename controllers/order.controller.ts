@@ -20,17 +20,17 @@ export const createOrder = CatchAsyncError(
   async (req: IGetUserRequest, res: Response, next: NextFunction) => {
     try {
       const { courseId, payment_Info } = req.body;
+// console.log(courseId, payment_Info)
+      // if(payment_Info){
+      //   if("id" in payment_Info){
+      //     const paymentIntentId = payment_Info.id
+      //     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
 
-      if(payment_Info){
-        if("id" in payment_Info){
-          const paymentIntentId = payment_Info.id
-          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
-
-          if(paymentIntent.status !== "succeeded"){
-            return next(new ErrorHandler("Payment not successful", 400))
-          }
-        }
-      }
+      //     if(paymentIntent.status !== "succeeded"){
+      //       return next(new ErrorHandler("Payment not successful", 400))
+      //     }
+      //   }
+      // }
       const userId = req.user._id;
 
       const user = await userModel.findById(userId);
@@ -98,8 +98,8 @@ export const createOrder = CatchAsyncError(
         title: "New Order",
         message: `You have successfully purchased ${course.name} course`,
       });
-
-      if (course.purchased) {
+      if (course.purchased || course.purchased === 0) {
+        console.log(course.purchased)
         course.purchased += 1;
       }
 
