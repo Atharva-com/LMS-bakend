@@ -397,6 +397,8 @@ export const addReview = CatchAsyncError(
 
       course?.save();
 
+      await redis.set(courseId, JSON.stringify(course), "EX", 604800);
+
       const notification = {
         title: "New Review Recieved.",
         message: `${req.user?.name} has given a review on your course ${course?.name}`,
@@ -425,7 +427,7 @@ export const addReplyToReview = CatchAsyncError(
   async (req: IGetUserRequest, res: Response, next: NextFunction) => {
     try {
       const { comment, courseId, reviewId } = req.body as IAddCommentReplyData;
-
+console.log(reviewId)
       const course = await CourseModel.findById(courseId);
 
       if (!course) {
@@ -433,7 +435,7 @@ export const addReplyToReview = CatchAsyncError(
       }
 
       const review = course?.reviews?.find(
-        (item: any) => item._id.toString() === reviewId
+        (item: any) => item._id.toString() === reviewId.toString()
       );
 
       if (!review) {
@@ -452,6 +454,8 @@ export const addReplyToReview = CatchAsyncError(
       review?.commentReplies.push(replyData);
 
       course?.save();
+
+      await redis.set(courseId, JSON.stringify(course), "EX", 604800);
 
       // create notification
 

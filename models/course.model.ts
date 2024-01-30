@@ -21,6 +21,11 @@ interface ILink extends Document {
     url: string
 }
 
+interface IQuestionReply extends Document {
+    user: IUser,
+    answer: string
+}
+
 interface ICourseData extends Document {
     title: string,
     description: string,
@@ -69,12 +74,19 @@ const LinkSchema = new Schema<ILink>({
     url: String
 })
 
+const answerSchema = new Schema<IQuestionReply>({
+    user: {
+        type: Object,
+    },
+    answer: String
+}, {timestamps: true});
+
 const commentSchema = new Schema<IComment>({
     user: {
         type: Object,
     },
     question: String,
-    questionReplies: [Object]
+    questionReplies: [answerSchema]
 }, {timestamps: true});
 
 const courseDataSchema = new Schema<ICourseData>({
