@@ -427,7 +427,6 @@ export const addReplyToReview = CatchAsyncError(
   async (req: IGetUserRequest, res: Response, next: NextFunction) => {
     try {
       const { comment, courseId, reviewId } = req.body as IAddCommentReplyData;
-console.log(reviewId)
       const course = await CourseModel.findById(courseId);
 
       if (!course) {
@@ -445,6 +444,8 @@ console.log(reviewId)
       const replyData: any = {
         user: req?.user,
         comment,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       if (!review?.commentReplies) {

@@ -1,7 +1,9 @@
 import { app } from "./app";
 import connectToDb from "./utils/db";
 require("dotenv").config()
+import http from "http"
 import {v2 as cloudinary} from "cloudinary"
+const server = http.createServer(app)
 
 // cloudinary configuration
 cloudinary.config({
@@ -12,7 +14,7 @@ cloudinary.config({
 })
 
 // create server
-app.listen(process.env.PORT, () => {
+server.listen(process.env.PORT, () => {
     console.log("server listening on port " + process.env.PORT)
     connectToDb()
 })
