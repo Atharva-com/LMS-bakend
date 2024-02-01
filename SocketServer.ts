@@ -4,12 +4,14 @@ import http from 'http';
 export const initSocketServer = (server: http.Server) => {
     const io = new SocketIOServer(server);
     io.on("connection", (socket) => {
-        socket.on("notification", (data: any) => {
-            io.emit("newNotification", data)
-        })
-    
+        console.log('A user connected')
+
+        socket.on("notification", (data) => {
+            io.emit("newNotification", data);
+        });
+
         socket.on("disconnect", () => {
-            console.log("socket disconnected")
-        })
+            console.log("user disconnected");
+        });
     })
 }

@@ -103,6 +103,8 @@ export const createOrder = CatchAsyncError(
 
       await course.save();
 
+      await redis.set(course._id, JSON.stringify(course))
+
       newOrder(data, res, next);
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
