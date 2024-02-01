@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Purchase Confirmation</title>
+    <style>
+      body {
+          font-family: 'Arial', sans-serif;
+          line-height: 1.6;
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+      }
+
+      .container {
+          max-width: 600px;
+          margin: 20px auto;
+          padding: 20px;
+          background-color: #ffffff;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .message-sm {
+          text-align: center;
+          margin-bottom: 20px;
+      }
+
+      h1, h2 {
+          color: #3498db;
+          margin-bottom: 10px;
+      }
+
+      .course-info {
+          margin-bottom: 20px;
+      }
+
+      table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+          border-bottom: 1px solid #ddd;
+      }
+
+      th, td {
+          border: 1px solid #ddd;
+          padding: 12px;
+          text-align: left;
+      }
+
+      th {
+          background-color: #f2f2f2;
+      }
+
+      .footer {
+          text-align: center;
+          color: #777;
+          font-size: 14px;
+      }
+
+      .footer a {
+          color: #3498db;
+          text-decoration: none;
+      }
+  </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="message-sm">
+        <h1>Course Purchase Confirmation</h1>
+        <h2>Your Order has been confirmed!</h2>
+        <p>And we're just as excited as you are.</p>
+      </div>
+
+      <br />
+      <br />
+
+      <div class="course-info">
+        <h2>Thank you for your purchase of the following course:</h2>
+        <table style="border-bottom: 1px solid #0000002f">
+          <tr>
+            <td>Order: #<%= order._id %></td>
+            <td>Order Date: <%= order.date %></td>
+          </tr>
+        </table>
+        <table style="width: 90%; margin: auto; display: block">
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Price</th>
+              <th>Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><%= order.name %></td>
+              <td><%= order.price %></td>
+              <td>1</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Total Amount: <%= order.price %></p>
+      </div>
+
+      <div class="footer">
+
+        <p>
+          Thank you for choosing our platform! If you have any questions or
+          concerns, please don't hesitate to contact us.
+        </p>
+
+        <p>If you have anyquestions, please contact oursupport team at <a href="mailto: github1504@gmail.com">github1504@gmail.com</a></p>
+        <p>&copy; 2024 LMS, All Rights reserved .</p>
+      </div>
+    </div>
+  </body>
+</html>
