@@ -9,6 +9,7 @@ import OrderRouter from "./routes/order.route";
 import NotificationRouter from "./routes/notification.route";
 import analyticsRouter from "./routes/analytics.route";
 import layoutRoute from "./routes/layout.route";
+import { rateLimit } from 'express-rate-limit'
 require("dotenv").config();
 
 // bodyParser
@@ -24,6 +25,14 @@ app.use(
     credentials: true,
   })
 );
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+});
+
 
 // routes
 app.use("/api/v1", UserRouter, CourseRouter, OrderRouter, NotificationRouter, analyticsRouter, layoutRoute)
@@ -44,6 +53,8 @@ app.all("*", (req, res, next) => {
   });
   next(err);
 });
+
+app.use(limiter)
 
 // error handler
 app.use(ErrorMiddleware)
