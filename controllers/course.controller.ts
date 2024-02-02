@@ -381,6 +381,8 @@ export const addReview = CatchAsyncError(
         user: req.user,
         comment: review,
         rating,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       course?.reviews?.push(reviewData);

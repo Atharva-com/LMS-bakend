@@ -269,6 +269,8 @@ exports.addReview = (0, catchAsyncErrors_1.CatchAsyncError)(async (req, res, nex
             user: req.user,
             comment: review,
             rating,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
         };
         course?.reviews?.push(reviewData);
         let avg = 0;
