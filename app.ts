@@ -21,7 +21,7 @@ app.use(cookieParser());
 // cors => cross origin resource sharing
 app.use(
   cors({
-    origin: ["https://lms-eight-phi.vercel.app"],
+    origin: ["https://lms-frontend-pearl-five.vercel.app/"],
     credentials: true,
   })
 );
