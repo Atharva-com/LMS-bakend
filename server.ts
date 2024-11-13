@@ -3,7 +3,7 @@ import connectToDb from "./utils/db";
 require("dotenv").config()
 import http from "http"
 import {v2 as cloudinary} from "cloudinary"
-import { initSocketServer } from "./SocketServer";
+// import { initSocketServer } from "./SocketServer";
 const server = http.createServer(app)
 
 // cloudinary configuration
@@ -14,8 +14,8 @@ cloudinary.config({
 
 })
 
-// connect with socketio
-initSocketServer(server)
+// // connect with socketio
+// initSocketServer(server)
 
 // create server
 server.listen(process.env.PORT, () => {
