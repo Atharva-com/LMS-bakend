@@ -12,6 +12,14 @@ import layoutRoute from "./routes/layout.route";
 import { rateLimit } from 'express-rate-limit'
 require("dotenv").config();
 
+
+
+// bodyParser
+app.use(express.json({ limit: "50mb" }));
+
+// cookieParser
+app.use(cookieParser());
+
 // cors => cross origin resource sharing
 app.use(
   cors({
@@ -19,12 +27,6 @@ app.use(
     credentials: true,
   })
 );
-
-// bodyParser
-app.use(express.json({ limit: "50mb" }));
-
-// cookieParser
-app.use(cookieParser());
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
