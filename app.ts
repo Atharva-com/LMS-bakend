@@ -15,7 +15,7 @@ require("dotenv").config();
 // cors => cross origin resource sharing
 app.use(
   cors({
-    origin: ['https://lms-frontend-xi-bice.vercel.app/'],
+    origin: ['https://lms-frontend-xi-bice.vercel.app'],
     credentials: true,
   })
 );
