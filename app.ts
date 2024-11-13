@@ -23,7 +23,7 @@ app.use(cookieParser());
 // cors => cross origin resource sharing
 app.use(
   cors({
-    origin: ['https://lms-frontend-xi-bice.vercel.app'],
+    origin: ['https://lms-frontend-xi-bice.vercel.app', 'http://localhost:3000'],
     credentials: true,
   })
 );
@@ -39,13 +39,6 @@ const limiter = rateLimit({
 // routes
 app.use("/api/v1", UserRouter, CourseRouter, OrderRouter, NotificationRouter, analyticsRouter, layoutRoute)
 
-// testing api
-app.get("/test", (req, res) => {
-  //   res.send("Hello World!")
-  res.status(200).json({
-    message: "Hello World!",
-  });
-});
 
 // unknwon routes
 app.all("*", (req, res, next) => {
