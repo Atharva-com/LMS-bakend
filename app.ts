@@ -23,7 +23,7 @@ app.use(cookieParser());
 // cors => cross origin resource sharing
 app.use(
   cors({
-    origin: ['https://lms-frontend-xi-bice.vercel.app/', 'http://localhost:3000'],
+    origin: ['https://lms-frontend-xi-bice.vercel.app', 'http://localhost:3000'],
     credentials: true,
   })
 );
